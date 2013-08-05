@@ -1,0 +1,5 @@
+nohup.out
+*.log
+*.pem
+*.pyc
+static/config.properties
