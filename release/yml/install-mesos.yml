@@ -1,0 +1,35 @@
+---
+#   Install Mesos
+#     ansible-playbook -i <node-list> --extra-vars "mesos_version=0.13.0"
+
+- hosts: default-*
+  user: root
+  
+  vars:
+    mesos_version: 0.13.0
+    install_dir: /root
+      
+  tasks:
+    - name: Download Mesos ${mesos_version}
+      get_url: url=http://archive.apache.org/dist/mesos/${mesos_version}/mesos-${mesos_version}.tar.gz dest=${install_dir}/
+      
+    - name: Install python26-devel  
+      yum: name=python26-devel state=latest
+    
+    - name: Install python-devel  
+      yum: name=python-devel state=latest
+      
+    - name: Install libunwind-devel
+      yum: name=libunwind-devel state=latest
+      
+    - name: Untar mesos
+      command: tar zxvf mesos-${mesos_version}.tar.gz chdir=${install_dir}/  
+      
+    - name: Install mesos
+      command: ./configure chdir=${install_dir}/mesos-${mesos_version}
+      
+    - name: Make mesos
+      command: make chdir=${install_dir}/mesos-${mesos_version}
+     
+    - name: Install mesos
+      command: make install chdir=${install_dir}/mesos-${mesos_version}

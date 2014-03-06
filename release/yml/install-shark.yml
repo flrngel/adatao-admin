@@ -1,0 +1,25 @@
+---
+#   Install Spark
+#     ansible-playbook -i <node-list> --extra-vars "shark_version=v0.7.1"
+
+- hosts: default-*
+  user: root
+  gather_facts: no
+  
+  vars:
+    shark_version: v0.7.1
+        
+  tasks:
+
+  # For this task to work, make sure this playbook is invoked with ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o ForwardAgent=yes"
+  - name: Download Shark ${shark_version}
+    git: repo=git@github.com:adatao/shark.git dest=/root/shark-${shark_version} version=${shark_version}
+    connection: ssh
+  
+  - name: Copy configuration
+    command: cp /root/shark/conf/shark-env.sh /root/shark-${shark_version}/conf/
+      
+  - name: Compile Shark
+    command: sbt/sbt clean compile chdir=/root/shark-${shark_version}
+    
+   

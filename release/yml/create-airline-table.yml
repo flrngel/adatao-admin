@@ -1,0 +1,15 @@
+--- 
+
+- hosts: default-master
+  user: root
+  gather_facts: no
+
+  vars: 
+    
+  tasks:
+  - name: Copy Hive and Shark configuration
+    copy: src=../conf/hive-site.xml dest=/root/hive-0.9.0-bin/conf/hive-site.xml backup=yes 
+    copy: src=../conf/shark-env.sh dest=/root/shark/conf/shark-env.sh backup=yes
+  - name: Create airline table 
+    script: ../bin/create-airline-table.sh
+ 

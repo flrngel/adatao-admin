@@ -34,23 +34,27 @@ class NewClusterHandler(tornado.web.RequestHandler):
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
             if len(master_nodes) > 0:
                 return self.render('error.html', error_msg="Cluster name is already existed!")
-            num_slave = self.get_argument("num_slave", "2")
-            key_pair = self.get_argument("key_pair", "")
-            instance_type = self.get_argument("instance_type", "m1.small")
-            master_instance_type = self.get_argument("master_instance_type", "m1.small")
-            zone = self.get_argument("zone", "us-east-1e")
-            ebs_vol_size = self.get_argument("ebs_vol_size", "10")
-            swap = self.get_argument("swap", "1024")
-            cluster_type = self.get_argument("cluster_type", "mesos")
-            (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
-            os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY
+            num_slave                           = self.get_argument("num_slave", "2")
+            key_pair                            = self.get_argument("key_pair", "")
+            instance_type                       = self.get_argument("instance_type", "m1.small")
+            master_instance_type                = self.get_argument("master_instance_type", "m1.small")
+            zone                                = self.get_argument("zone", "us-east-1e")
+            ebs_vol_size                        = self.get_argument("ebs_vol_size", "10")
+            swap                                = self.get_argument("swap", "1024")
+            cluster_type                        = self.get_argument("cluster_type", "mesos")
+            (AWS_ACCESS_KEY, AWS_SECRET_KEY)    = utils.get_aws_credentials()
+            os.environ['AWS_ACCESS_KEY_ID']     = AWS_ACCESS_KEY
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
             key_pair_file =  os.getcwd() + "/keys/" + key_pair + ".pem" 
-            sys.argv = ["spark_ec2.py", "-s", num_slave, "-u", "root", "-k", key_pair, "-i", key_pair_file, "-t", instance_type, "-m", master_instance_type, "-r", "us-east-1", "-z" , zone, "--ebs-vol-size=" + ebs_vol_size, "--swap=" + swap, "--cluster-type=" + cluster_type, "launch", cluster_name]
-            t = Thread(target=spark_ec2.main, args=())
-            t.daemon = True
-            t.start()
-            self.render('notice.html', identity_file=key_pair_file)
+            #sys.argv = ["spark_ec2.py", "-s", num_slave, "-u", "root", "-k", key_pair, "-i", key_pair_file, "-t", instance_type, "-m", master_instance_type, "-r", "us-east-1", "-z" , zone, "--ebs-vol-size=" + ebs_vol_size, "--swap=" + swap, "--cluster-type=" + cluster_type, "launch", cluster_name]
+            #t = Thread(target=spark_ec2.main, args=())
+            #t.daemon = True
+            #t.start()
+
+            command = ["release/launch-cluster.sh", cluster_name, num_slave, "--elastic-ip", "54.197.232.5", "--ami", "ami-1b050872"]
+            print ("Running : " + ' '.join(command))
+            subprocess.call(command)
+            self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
             self.render('error.html', error_msg=str(e))
@@ -195,40 +199,26 @@ class ActionHandler(tornado.web.RequestHandler):
                     (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
                     os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY
                     os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
-                    sys.argv = ["spark_ec2.py", "-u", "root", "-k", key_pair, "-i", key_pair_file, "start", cluster_name]
-                    t = Thread(target=spark_ec2.main, args=())
-                    t.daemon = True
-                    t.start()
-                    self.render('notice.html', identity_file=key_pair_file)
+                    #sys.argv = ["spark_ec2.py", "-u", "root", "-k", key_pair, "-i", key_pair_file, "start", cluster_name]
+                    #t = Thread(target=spark_ec2.main, args=())
+                    #t.daemon = True
+                    #t.start()
+                    command = ["release/start-cluster.sh", cluster_name, "--elastic-ip", "54.197.232.5"]
+                    print ("Running : " + ' '.join(command))
+                    subprocess.Popen(command)
+                    self.redirect("/")
                     return
                 elif action == "stop":
-                    conn = utils.get_ec2_conn(self)
-                    (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-                    for inst in master_nodes:
-                        if inst.state not in ["shutting-down", "terminated"]:
-                          inst.stop()
-                    print "Stopping slaves..."
-                    for inst in slave_nodes:
-                        if inst.state not in ["shutting-down", "terminated"]:
-                          inst.stop()
-                    if zoo_nodes != []:
-                        print "Stopping zoo..."
-                        for inst in zoo_nodes:
-                          if inst.state not in ["shutting-down", "terminated"]:
-                            inst.stop()
+                    command = ["release/stop-cluster.sh", cluster_name]
+                    print ("Running : " + ' '.join(command))
+                    subprocess.Popen(command)
                     time.sleep(1)
                     self.redirect("/")
                     return
-                elif action == "terminate":
-                    conn = utils.get_ec2_conn(self)
-                    (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-                    for inst in master_nodes:
-                        inst.terminate()
-                    for inst in slave_nodes:
-                        inst.terminate()
-                    if zoo_nodes != []:
-                        for inst in zoo_nodes:
-                          inst.terminate()
+                elif action == "terminate": 
+                    command = ["release/terminate-cluster.sh", cluster_name]
+                    print ("Running : " + ' '.join(command))
+                    subprocess.Popen(command)
                     time.sleep(1)
                     self.redirect("/")
                     return

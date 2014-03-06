@@ -1,0 +1,10 @@
+---
+- hosts: default-master
+  vars:
+    http_port: 80
+  user: root
+  gather_facts: no
+  tasks:
+  - name: Start MySQL
+    service: name=mysqld state=started
+

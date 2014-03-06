@@ -1,0 +1,46 @@
+---
+# Light upgrade: no new lib jars added => no need to run run-once.sh
+
+# Deploy BigR latest master on spark6
+#     ansible-playbook -i ~/etc/ansible/spark6
+
+# Deploy a specific BigR version on spark3
+#     ansible-playbook -i ~/etc/ansible/spark3 --extra-vars "bigr_version=1.23.45 root_dir=/mnt"
+
+# Requires an inventory file with matching host patterns (e.g. default-master, default-slaves).
+
+- hosts: default-slaves
+  user: root
+  gather_facts: no
+  
+  vars:
+    bigr_version: master
+    root_dir: /root
+    bigr_dir: ${root_dir}/BigR
+    
+  tasks:
+  
+  - name: remove ${bigr_dir}/server/target so that slaves SPARK_CLASSPATH does not see outdated jars
+    file: path=${bigr_dir}/server/target state=absent recurse=yes
+
+- hosts: default-master
+  user: root
+  gather_facts: no
+
+  # you must have ssh-agent running on local machine
+  # with .ssh/config having this line
+  #   ForwardAgent yes
+  connection: ssh
+
+  vars:
+    bigr_version: master
+    root_dir: /root
+    bigr_dir: ${root_dir}/BigR
+    
+  tasks:
+    
+  - name: Pull BigR from Github, version = "$bigr_version"
+    git: repo=git@github.com:adatao/BigR.git dest=${bigr_dir} version=${bigr_version}
+
+  - name: mvn clean package -DskipTests
+    command: mvn clean package -DskipTests chdir=${bigr_dir}/server

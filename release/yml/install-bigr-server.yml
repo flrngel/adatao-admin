@@ -1,0 +1,61 @@
+---
+# Deploy BigR latest master on spark6
+#     ansible-playbook -i ~/etc/ansible/spark6
+
+# Deploy a specific BigR version on spark3
+#     ansible-playbook -i ~/etc/ansible/spark3 --extra-vars "bigr_version=1.23.45"
+
+# Update BigR version on spark3 (only fetch git and recompile, skipping some preparation tasks)
+#     ansible-playbook -i ~/etc/ansible/spark3 --tags compile
+
+# Ensure BigR configuration is correct
+#     ansible-playbook -i ~/etc/ansible/spark3 --tags config
+
+# Requires an inventory file with matching host patterns (e.g. default-master, default-slaves).
+
+- hosts: default*
+  user: root
+  gather_facts: no
+
+  vars:
+    bigr_version: master
+    key_name: "{{ lookup('env','admin_ssh_key') }}"
+    root_dir: /mnt
+    bigr_dir: ${root_dir}/BigR-${bigr_version}
+    spark_dir: ${root_dir}
+    
+  tasks:
+  - name: Disable StrictHostKeyChecking
+    action: shell /bin/echo -e "Host *\n\tStrictHostKeyChecking no\n" > /root/.ssh/config creates=/root/.ssh/config    
+
+  - name: Download Maven
+    get_url: url=http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz dest=/root/apache-maven-3.0.5-bin.tar.gz
+
+  - name: Unzip Maven
+    command: tar xvzf /root/apache-maven-3.0.5-bin.tar.gz creates=/root/apache-maven-3.0.5
+
+  - name: Create symlink /usr/local/bin/mvn
+    file: src=/root/apache-maven-3.0.5/bin/mvn dest=/usr/local/bin/mvn state=link
+
+# For this task to work, make sure this playbook is invoked with ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o ForwardAgent=yes"
+  - name: Pull BigR from Github, version = "$bigr_version"
+    git: repo=git@github.com:adatao/BigR.git dest=${bigr_dir} version=$bigr_version
+    connection: ssh
+
+  - name: run-once.sh to setup BigR and dependencies under ${dir}/BigR/lib_managed
+    shell: bin/run-once.sh chdir=${bigr_dir}
+
+- hosts: default-master
+  user: root
+  gather_facts: no
+  
+  vars:
+    bigr_version: master
+    root_dir: /mnt
+    bigr_dir: ${root_dir}/BigR-${bigr_version}
+    spark_dir: ${root_dir}
+    
+  tasks:
+  - name: Create bigr-env.sh with correct SPARK_HOME config
+    template: src=../conf/pa-env.sh.j2 dest=${bigr_dir}/server/conf/distributed/pa-env.sh  
+  

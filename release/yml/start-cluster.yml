@@ -1,0 +1,26 @@
+---
+- hosts: default-slaves
+  user: root
+  gather_facts: no
+
+  tasks:  
+  - name: Start Rserve on slaves
+    script: ../bin/start-rserve.sh 
+
+- hosts: default-master
+  user: root
+  gather_facts: no
+
+  tasks: 
+  # mesos is automatically started with spark_ec2.py
+  #- name: Start mesos on master
+  #  command: /root/spark-ec2/mesos/stop-mesos
+  #  command: /root/spark-ec2/mesos/start-mesos
+  - name: Start mySQL on master
+    service: name=mysqld state=started
+  - name: Start Rserve and pA server on master
+    command: chdir=/root/BigR/server exe/start-pa-server.sh
+  - name: Start pI on master
+    command: /root/pInsights/run-pInsights-server.sh
+  #- name: Start haproxy on master 
+  #  command: service haproxy restart

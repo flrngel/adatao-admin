@@ -1,0 +1,40 @@
+---
+# Install R
+
+- hosts: default-*
+  user: root
+  gather_facts: no
+
+  vars:
+    key_name: "{{ lookup('env','admin_ssh_key') }}"
+
+  tasks:
+
+  - name: Ensure R is installed
+    yum: name=$item state=installed
+    with_items:
+      - R
+      - R-devel
+
+  - name: Ensure required R packages are installed
+    command: R -q -e "install.packages('$item', contriburl=contrib.url('http://cran.cnr.Berkeley.edu/'))" creates="/usr/lib64/R/library/$item"
+    with_items:
+      - arules
+      - boot
+      - coda
+      - e1071
+      - gbm
+      - ggplot2
+      - mvtnorm
+      - plyr
+      - rJava
+      - rpart
+      - Rserve
+      - sp
+      - survival
+      - zoo
+
+
+  # This is a local script
+  - name: Ensure Rserve is started
+    script: ../bin/ensure-rserve-started.sh
