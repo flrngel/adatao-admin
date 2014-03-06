@@ -53,7 +53,7 @@ class NewClusterHandler(tornado.web.RequestHandler):
 
             command = ["release/launch-cluster.sh", cluster_name, num_slave, "--elastic-ip", "54.197.232.5", "--ami", "ami-1b050872"]
             print ("Running : " + ' '.join(command))
-            subprocess.call(command)
+            subprocess.Popen(command)
             self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
