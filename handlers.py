@@ -4,7 +4,7 @@ from threading import Thread
 from tornado import gen
 from utils import ssh
 import os
-import spark_ec2
+#import spark_ec2
 import subprocess
 import sys
 import time
