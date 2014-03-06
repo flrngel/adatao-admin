@@ -74,7 +74,7 @@ class ClusterHandler(tornado.web.RequestHandler):
         try:
             conn = utils.get_ec2_conn(self)
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-            services = ["mesos", "shark", "ganglia", "ephemeral_hdfs", "persistent_hdfs", "hadoop_mapreduce"]
+            services = ["mesos", "shark", "ganglia", "ephemeral_hdfs", "persistent_hdfs", "hadoop_mapreduce", "pi", "pa", "gridftp", "spark"]
             service_names = {
                 "mesos"             : "Mesos", 
                 "shark"             : "Shark", 
@@ -93,7 +93,7 @@ class ClusterHandler(tornado.web.RequestHandler):
                 "ephemeral_hdfs"    : 50070, 
                 "persistent_hdfs"   : 60070, 
                 "hadoop_mapreduce"  : 50030, 
-                "pa"                : 7911
+                "pa"                : 7911,
                 "pi"                : 8890, 
                 "gridftp"           : 5000, 
                 "spark"             : 30001}
