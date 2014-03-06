@@ -9,7 +9,7 @@
 
 security_setup_preamble() {
 	export admin_ssh_key="adatao2" # This must be a key known to AWS, and a secure key that has no cleartext .pem files lying around
-	export git_ssh_key="adatao-git" # This must be a key registered with github.com
+	#export git_ssh_key="adatao-git" # This must be a key registered with github.com
 
 
 	local DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" ; cd $DIR
@@ -19,7 +19,8 @@ security_setup_preamble() {
 
 	#echo "++++++ Set up SSH agent and import all keys"
 	local candidate_key_files="$HOME/.ssh/id_rsa $HOME/.ssh/*.pem keys/*.pem"
-	local admin_key_found=false git_key_found=false
+	local admin_key_found=false 
+	#local git_key_found=false
 
 	we_started_ssh_agent=false ; [ -z "$SSH_AGENT_PID" -a -z "$SSH_AUTH_SOCK" ] && eval `ssh-agent` && we_started_ssh_agent=true
 	local existing_keys=(`ssh-add -l | cut -f3 -d' '`)
@@ -35,10 +36,10 @@ security_setup_preamble() {
 		fi
 
 		[ `basename $candidate .pem` == $admin_ssh_key ] && local admin_key_found=true
-		[ `basename $candidate .pem` == $git_ssh_key ] && local git_key_found=true
+		#[ `basename $candidate .pem` == $git_ssh_key ] && local git_key_found=true
 	done
 
-	[ $git_key_found == false ] && echo "ERROR: Cannot find git_ssh_key $git_ssh_key.pem under $HOME/.ssh or $DIR/keys. Please fix." && exit 1
+	#[ $git_key_found == false ] && echo "ERROR: Cannot find git_ssh_key $git_ssh_key.pem under $HOME/.ssh or $DIR/keys. Please fix." && exit 1
 	[ $admin_key_found == false ] && echo "ERROR: Cannot find admin_ssh_key $admin_ssh_key.pem under $HOME/.ssh or $DIR/keys. Please fix." && exit 1
 
 	[ -n "$key_files" ] && ssh-add $key_files
