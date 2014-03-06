@@ -75,9 +75,39 @@ class ClusterHandler(tornado.web.RequestHandler):
             conn = utils.get_ec2_conn(self)
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
             services = ["mesos", "shark", "ganglia", "ephemeral_hdfs", "persistent_hdfs", "hadoop_mapreduce"]
-            service_names = {"mesos" : "Mesos", "shark" : "Shark", "ganglia": "Ganglia", "ephemeral_hdfs": "Ephemeral HDFS", "persistent_hdfs": "Persistent HDFS", "hadoop_mapreduce": "Hadoop MapReduce"}
-            service_ports = {"mesos" : 8080, "shark" : 10000, "ganglia": 5080, "ephemeral_hdfs": 50070, "persistent_hdfs": 60070, "hadoop_mapreduce": 50030}
-            service_links = {"mesos" : "http://" + master_nodes[0].public_dns_name + ":8080", "shark": "/sql_console?server=" + master_nodes[0].public_dns_name, "ganglia": "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", "ephemeral_hdfs": "http://" + master_nodes[0].public_dns_name + ":50070", "persistent_hdfs": "http://" + master_nodes[0].public_dns_name + ":60070", "hadoop_mapreduce": "http://" + master_nodes[0].public_dns_name + ":50030"}
+            service_names = {
+                "mesos"             : "Mesos", 
+                "shark"             : "Shark", 
+                "ganglia"           : "Ganglia", 
+                "ephemeral_hdfs"    : "Ephemeral HDFS", 
+                "persistent_hdfs"   : "Persistent HDFS", 
+                "hadoop_mapreduce"  : "Hadoop MapReduce", 
+                "pa"                : "Adatao pAnalytics", 
+                "pi"                : "Adatao pInsights", 
+                "gridftp"           : "Grid FTP", 
+                "spark"             : "Spark"}
+            service_ports = {
+                "mesos"             : 5050, 
+                "shark"             : 10000, 
+                "ganglia"           : 5080, 
+                "ephemeral_hdfs"    : 50070, 
+                "persistent_hdfs"   : 60070, 
+                "hadoop_mapreduce"  : 50030, 
+                "pa"                : 7911
+                "pi"                : 8890, 
+                "gridftp"           : 5000, 
+                "spark"             : 30001}
+            service_links = {
+                "mesos"             : "http://" + master_nodes[0].public_dns_name + ":5050", 
+                "shark"             : "/sql_console?server=" + master_nodes[0].public_dns_name, 
+                "ganglia"           : "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", 
+                "ephemeral_hdfs"    : "http://" + master_nodes[0].public_dns_name + ":50070", 
+                "persistent_hdfs"   : "http://" + master_nodes[0].public_dns_name + ":60070", 
+                "hadoop_mapreduce"  : "http://" + master_nodes[0].public_dns_name + ":50030",
+                "pa"                : "", 
+                "pi"                : "http://" + master_nodes[0].public_dns_name + ":8890",
+                "gridftp"           : "", 
+                "spark"             : "http://" + master_nodes[0].public_dns_name + ":30001"}
             service_statuses = {}
             if len(master_nodes) > 0:
                 dns = master_nodes[0].public_dns_name
