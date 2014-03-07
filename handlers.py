@@ -15,6 +15,7 @@ from slacker import Slacker
 from slacker.workers import ThreadWorker
 
 instance_types = ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge", "t1.micro", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc2.8xlarge", "cr1.8xlarge", "cg1.4xlarge", "hi1.4xlarge", "hs1.8xlarge"]
+installer_dir = "../Installer/"
 
 class NewClusterHandler(tornado.web.RequestHandler):
     def get(self):
@@ -42,6 +43,8 @@ class NewClusterHandler(tornado.web.RequestHandler):
             ebs_vol_size                        = self.get_argument("ebs_vol_size", "10")
             swap                                = self.get_argument("swap", "1024")
             cluster_type                        = self.get_argument("cluster_type", "mesos")
+	    elastic_ip				= self.get_argument("elastic_ip", "")
+	    ami					= self.get_argument("ami", "ami-3dd2de54" )
             (AWS_ACCESS_KEY, AWS_SECRET_KEY)    = utils.get_aws_credentials()
             os.environ['AWS_ACCESS_KEY_ID']     = AWS_ACCESS_KEY
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
@@ -51,7 +54,7 @@ class NewClusterHandler(tornado.web.RequestHandler):
             #t.daemon = True
             #t.start()
 
-            command = ["release/launch-cluster.sh", cluster_name, num_slave, "--elastic-ip", "54.197.232.5", "--ami", "ami-1b050872"]
+            command = [installer_dir+"launch-cluster.sh", cluster_name, num_slave, "--elastic-ip", elastic_ip, "--ami", ami]
             print ("Running : " + ' '.join(command))
             subprocess.Popen(command)
             self.redirect("/")
@@ -170,6 +173,8 @@ class ActionHandler(tornado.web.RequestHandler):
     def get(self):
         try:
             cluster_name = self.get_argument("cluster_name", "")
+            elastic_ip = self.get_argument("elastic_ip", "")
+            print ("Elastic IP " + elastic_ip)
             dns = self.get_argument("dns", "")
             service = self.get_argument("service", "")
             action = self.get_argument("action", "")
@@ -233,20 +238,20 @@ class ActionHandler(tornado.web.RequestHandler):
                     #t = Thread(target=spark_ec2.main, args=())
                     #t.daemon = True
                     #t.start()
-                    command = ["release/start-cluster.sh", cluster_name, "--elastic-ip", "54.197.232.5"]
+                    command = [installer_dir+"start-cluster.sh", cluster_name, "--elastic-ip", elastic_ip]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
                     self.redirect("/")
                     return
                 elif action == "stop":
-                    command = ["release/stop-cluster.sh", cluster_name]
+                    command = [installer_dir+"stop-cluster.sh", cluster_name]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
                     time.sleep(1)
                     self.redirect("/")
                     return
                 elif action == "terminate": 
-                    command = ["release/terminate-cluster.sh", cluster_name]
+                    command = [installer_dir+"terminate-cluster.sh", cluster_name]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
                     time.sleep(1)
