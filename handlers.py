@@ -43,16 +43,12 @@ class NewClusterHandler(tornado.web.RequestHandler):
             ebs_vol_size                        = self.get_argument("ebs_vol_size", "10")
             swap                                = self.get_argument("swap", "1024")
             cluster_type                        = self.get_argument("cluster_type", "mesos")
-	    elastic_ip				= self.get_argument("elastic_ip", "")
-	    ami					= self.get_argument("ami", "ami-3dd2de54" )
+            elastic_ip                          = self.get_argument("elastic_ip", "")
+            ami                                 = self.get_argument("ami", "" )
             (AWS_ACCESS_KEY, AWS_SECRET_KEY)    = utils.get_aws_credentials()
             os.environ['AWS_ACCESS_KEY_ID']     = AWS_ACCESS_KEY
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
             key_pair_file =  os.getcwd() + "/keys/" + key_pair + ".pem" 
-            #sys.argv = ["spark_ec2.py", "-s", num_slave, "-u", "root", "-k", key_pair, "-i", key_pair_file, "-t", instance_type, "-m", master_instance_type, "-r", "us-east-1", "-z" , zone, "--ebs-vol-size=" + ebs_vol_size, "--swap=" + swap, "--cluster-type=" + cluster_type, "launch", cluster_name]
-            #t = Thread(target=spark_ec2.main, args=())
-            #t.daemon = True
-            #t.start()
 
             command = [installer_dir+"launch-cluster.sh", cluster_name, num_slave, "--elastic-ip", elastic_ip, "--ami", ami]
             print ("Running : " + ' '.join(command))
@@ -77,36 +73,34 @@ class ClusterHandler(tornado.web.RequestHandler):
         try:
             conn = utils.get_ec2_conn(self)
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-            services = ["mesos", "shark", "ganglia", "ephemeral_hdfs", "persistent_hdfs", "hadoop_mapreduce", "pi", "pa", "gridftp", "spark"]
+            services = [
+                "mesos", 
+                "ganglia", 
+                "ephemeral_hdfs", 
+                "pi", 
+                "pa", 
+                "gridftp", 
+                "spark"]
             service_names = {
                 "mesos"             : "Mesos", 
-                "shark"             : "Shark", 
                 "ganglia"           : "Ganglia", 
                 "ephemeral_hdfs"    : "Ephemeral HDFS", 
-                "persistent_hdfs"   : "Persistent HDFS", 
-                "hadoop_mapreduce"  : "Hadoop MapReduce", 
                 "pa"                : "Adatao pAnalytics", 
                 "pi"                : "Adatao pInsights", 
                 "gridftp"           : "Grid FTP", 
                 "spark"             : "Spark"}
             service_ports = {
                 "mesos"             : 5050, 
-                "shark"             : 10000, 
                 "ganglia"           : 5080, 
                 "ephemeral_hdfs"    : 50070, 
-                "persistent_hdfs"   : 60070, 
-                "hadoop_mapreduce"  : 50030, 
                 "pa"                : 7911,
                 "pi"                : 8890, 
                 "gridftp"           : 5000, 
                 "spark"             : 30001}
             service_links = {
                 "mesos"             : "http://" + master_nodes[0].public_dns_name + ":5050", 
-                "shark"             : "/sql_console?server=" + master_nodes[0].public_dns_name, 
                 "ganglia"           : "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", 
                 "ephemeral_hdfs"    : "http://" + master_nodes[0].public_dns_name + ":50070", 
-                "persistent_hdfs"   : "http://" + master_nodes[0].public_dns_name + ":60070", 
-                "hadoop_mapreduce"  : "http://" + master_nodes[0].public_dns_name + ":50030",
                 "pa"                : "", 
                 "pi"                : "http://" + master_nodes[0].public_dns_name + ":8890",
                 "gridftp"           : "", 
@@ -172,13 +166,12 @@ class ActionHandler(tornado.web.RequestHandler):
     @adisp.process
     def get(self):
         try:
-            cluster_name = self.get_argument("cluster_name", "")
-            elastic_ip = self.get_argument("elastic_ip", "")
-            print ("Elastic IP " + elastic_ip)
-            dns = self.get_argument("dns", "")
-            service = self.get_argument("service", "")
-            action = self.get_argument("action", "")
-            key_pair = self.get_argument("key_pair", "")
+            cluster_name = self.get_argument("cluster_name")
+            dns = self.get_argument("dns")
+            elastic_ip = self.get_argument("elastic_ip")
+            service = self.get_argument("service")
+            action = self.get_argument("action")
+            key_pair = self.get_argument("key_pair")
             key_pair_file = os.getcwd() + "/keys/" + key_pair + ".pem"
             
             # Execute action
@@ -234,10 +227,6 @@ class ActionHandler(tornado.web.RequestHandler):
                     (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
                     os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY
                     os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
-                    #sys.argv = ["spark_ec2.py", "-u", "root", "-k", key_pair, "-i", key_pair_file, "start", cluster_name]
-                    #t = Thread(target=spark_ec2.main, args=())
-                    #t.daemon = True
-                    #t.start()
                     command = [installer_dir+"start-cluster.sh", cluster_name, "--elastic-ip", elastic_ip]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
