@@ -53,11 +53,12 @@ class NewClusterHandler(tornado.web.RequestHandler):
               cluster_name, 
               num_slave, 
               "--elastic-ip", elastic_ip, 
-              "--ssh-key", key_pair, 
-              "--type", instance_type, 
-              "--zone", zone, 
-              "--num-ebs-vols" num_ebs_volumes, 
-              "--ebs", 2, ebs_vol_size]
+              "--ssh-key", key_pair 
+              #"--type", instance_type, 
+              #"--zone", zone, 
+              #"--num-ebs-vols", num_ebs_volumes, 
+              #"--ebs", 2, ebs_vol_size
+              ]
             print ("Running : " + ' '.join(command))
             subprocess.Popen(command)
             #save the (cluster_name, elastic_ip) to file
