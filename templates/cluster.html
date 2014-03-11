@@ -10,8 +10,6 @@
 
 <h3>Cluster: {{cluster_name}}</h3>
 
-
-
 {% if len(master_nodes) > 0 %}
 	{% if master_nodes[0].state == "running" %}
 		<h4>Installed Services</h4>
@@ -104,21 +102,7 @@
 </table>
 
 {% if master_nodes[0].state=="stopped" %}
-	<form method="get" href="/action?cluster_name={{cluster_name}}&dns={{master_nodes[0].public_dns_name}}&service=cluster&action=start&key_pair={{master_nodes[0].key_name}}">
-		<fieldset>		
-			<label>Elastic IP</label> 
-			<!-- 
-			<input type="hidden" name="cluster_name" value="{{cluster_name}}">
-			<input type="hidden" name="dns" value="{{master_nodes[0].public_dns_name}}">
-			<input type="hidden" name="service" value="cluster">
-			<input type="hidden" name="action" value="start">
-			<input type="hidden" name="key_pair" value="{{master_nodes[0].key_name}}">
-			-->
-			<input type="text" name="elastic_ip" value="">
-			<input type="submit" class="btn btn-primary" value="Start cluster">
-		</fieldset>
-	</form>
-		
+	<a class="btn btn-primary" href="/action?cluster_name={{cluster_name}}&dns={{master_nodes[0].public_dns_name}}&service=cluster&action=start&key_pair={{master_nodes[0].key_name}}">Start cluster</a>
 {% elif master_nodes[0].state=="running" %}
 	<a class="btn btn-danger" href="javascript:redirect('Are you sure to stop cluster {{cluster_name}}?', '/action?cluster_name={{cluster_name}}&dns={{master_nodes[0].public_dns_name}}&service=cluster&action=stop&key_pair={{master_nodes[0].key_name}}')">Stop cluster</a>
 {% end %}
