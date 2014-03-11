@@ -44,15 +44,24 @@ class NewClusterHandler(tornado.web.RequestHandler):
             swap                                = self.get_argument("swap", "1024")
             cluster_type                        = self.get_argument("cluster_type", "mesos")
             elastic_ip                          = self.get_argument("elastic_ip", "")
-            ami                                 = self.get_argument("ami", "" )
             (AWS_ACCESS_KEY, AWS_SECRET_KEY)    = utils.get_aws_credentials()
             os.environ['AWS_ACCESS_KEY_ID']     = AWS_ACCESS_KEY
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
             key_pair_file =  os.getcwd() + "/keys/" + key_pair + ".pem" 
 
-            command = [installer_dir+"launch-cluster.sh", cluster_name, num_slave, "--elastic-ip", elastic_ip, "--ami", ami]
+            command = [installer_dir+"launch-cluster.sh", 
+              cluster_name, 
+              num_slave, 
+              "--elastic-ip", elastic_ip, 
+              "--ssh-key", key_pair, 
+              "--type", instance_type, 
+              "--zone", zone, 
+              "--num-ebs-vols" num_ebs_volumes, 
+              "--ebs", 2, ebs_vol_size]
             print ("Running : " + ' '.join(command))
             subprocess.Popen(command)
+            #save the (cluster_name, elastic_ip) to file
+            utils.set_elastic_ip(cluster_name, elastic_ip)
             self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
@@ -166,13 +175,12 @@ class ActionHandler(tornado.web.RequestHandler):
     @adisp.process
     def get(self):
         try:
-            cluster_name = self.get_argument("cluster_name")
-            dns = self.get_argument("dns")
-            elastic_ip = self.get_argument("elastic_ip")
-            service = self.get_argument("service")
-            action = self.get_argument("action")
-            key_pair = self.get_argument("key_pair")
-            key_pair_file = os.getcwd() + "/keys/" + key_pair + ".pem"
+            cluster_name    = self.get_argument("cluster_name")
+            dns             = self.get_argument("dns")
+            service         = self.get_argument("service")
+            action          = self.get_argument("action")
+            key_pair        = self.get_argument("key_pair")
+            key_pair_file   = os.getcwd() + "/keys/" + key_pair + ".pem"
             
             # Execute action
             if service == "mesos":
@@ -227,7 +235,11 @@ class ActionHandler(tornado.web.RequestHandler):
                     (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
                     os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY
                     os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
-                    command = [installer_dir+"start-cluster.sh", cluster_name, "--elastic-ip", elastic_ip]
+                    # get the elastic-ip associated with cluster_name
+                    elastic_ip = utils.get_elastic_ip(cluster_name)                    
+                    command = [installer_dir+"start-cluster.sh", 
+                      cluster_name, 
+                      "--elastic-ip", elastic_ip]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
                     self.redirect("/")
@@ -240,6 +252,8 @@ class ActionHandler(tornado.web.RequestHandler):
                     self.redirect("/")
                     return
                 elif action == "terminate": 
+                    # delete the elastic-ip associated with cluster_name
+                    utils.delete_elastic_ip(cluster_name)
                     command = [installer_dir+"terminate-cluster.sh", cluster_name]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)

@@ -19,7 +19,8 @@
 				<td>{{dict_masters.get(name)[0].key_name}}</td>
 				<td>
 					{{len(dict_masters.get(name))}} Master{% if len(dict_masters.get(name))>1 %}s{% end %} - 
-					{{len(dict_slaves.get(name))}} Slave{% if len(dict_slaves.get(name))>1 %}s{% end %}</td>
+					{{len(dict_slaves.get(name))}} Slave{% if len(dict_slaves.get(name))>1 %}s{% end %}
+				</td>
 				<td>
 					{% if dict_masters.get(name)[0].state=="running"%}
 						<img src="/static/img/status_green.gif">

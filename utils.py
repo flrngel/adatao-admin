@@ -1,5 +1,6 @@
 from boto import ec2
 import sys
+import csv
 from socket import * 
 from hive_service import ThriftHive
 from hive_service.ttypes import HiveServerException
@@ -78,6 +79,36 @@ def save_aws_credentials(AWS_ACCESS_KEY, AWS_SECRET_KEY):
 	config.set('AWS', 'AWS_SECRET_KEY', AWS_SECRET_KEY)
 	cfgfile = open(CONFIG_FILE, 'w')
 	config.write(cfgfile)
+
+def get_elastic_ip(self, cluster_name):
+	reader = csv.reader(open('dict.csv', 'rb'))
+	mydict = dict(x for x in reader)
+	if cluster_name in mydict:
+		ip = mydict(cluster_name)
+		print "Cluster " + cluster_name + " found with elastic ip " + ip
+		return ip
+	else:
+		print "Cluster " + cluster_name + " not found!"
+
+def set_elastic_ip(cluster_name, elastic_ip):
+	reader = csv.reader(open('dict.csv', 'rb'))
+	mydict = dict(x for x in reader)
+	mydict[cluster_name] = elastic_ip
+	writer = csv.writer(open('dict.csv', 'wb'))
+	for key, value in mydict.items():
+	   writer.writerow([key, value])
+
+def delete_elastic_ip(cluster_name):
+	reader = csv.reader(open('dict.csv', 'rb'))
+	mydict = dict(x for x in reader)
+	if cluster_name in mydict:
+		print "Cluster " + cluster_name + " found with elastic ip " + ip + " ... removing ..."
+		mydict.pop
+		writer = csv.writer(open('dict.csv', 'wb'))
+		for key, value in mydict.items():
+		writer.writerow([key, value])
+	else:
+		print "Cluster " + cluster_name + " not found!"
 
 def detect_existing_clusters(conn):
 	reservations = conn.get_all_instances()

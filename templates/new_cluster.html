@@ -6,7 +6,6 @@
 			placeholder="Cluster name">
 		<label>Number of slaves</label> <input type="text" name="num_slave" value="2"> 
 		<label>Elastic IP</label> <input type="text" name="elastic_ip" value=""> 
-		<label>AMI</label> <input type="text" name="ami" value="ami-3dd2de54">
 		<label>Key Pair</label> <select name="key_pair">
 			{% for key_pair in key_pairs %}
 				<option>{{key_pair.name}}</option>
