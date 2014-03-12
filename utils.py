@@ -104,7 +104,7 @@ def delete_elastic_ip(cluster_name):
 	if cluster_name in mydict:
 		ip = mydict[cluster_name]
 		print "Cluster " + cluster_name + " found with elastic ip " + ip + " ... removing ..."
-		mydict.remove(cluster_name)
+		del mydict[cluster_name]
 		writer = csv.writer(open('dict.csv', 'wb'))
 		for key, value in mydict.items():
 			writer.writerow([key, value])
