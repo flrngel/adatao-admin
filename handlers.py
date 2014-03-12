@@ -114,7 +114,7 @@ class ClusterHandler(tornado.web.RequestHandler):
                 "ganglia"           : "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", 
                 "ephemeral_hdfs"    : "http://" + master_nodes[0].public_dns_name + ":50070", 
                 "pa"                : "", 
-                "pi"                : "http://" + str(utils.get_elastic_ip(cluster_name)) + "/pi/",
+                "pi"                : "http://" + master_nodes[0].public_dns_name + "/pi/",
                 "gridftp"           : "", 
                 "spark"             : "http://" + master_nodes[0].public_dns_name + ":30001"}
             service_statuses = {}
