@@ -85,12 +85,13 @@ class ClusterHandler(tornado.web.RequestHandler):
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
             services = [
                 "mesos", 
-                "ganglia", 
+                #"ganglia", 
                 "ephemeral_hdfs", 
                 "pi", 
                 "pa", 
                 "gridftp", 
-                "spark"]
+                "spark"
+                ]
             service_names = {
                 "mesos"             : "Mesos", 
                 "ganglia"           : "Ganglia", 

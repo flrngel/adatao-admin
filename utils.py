@@ -84,7 +84,7 @@ def get_elastic_ip(cluster_name):
 	reader = csv.reader(open('dict.csv', 'r+'))
 	mydict = dict(x for x in reader)
 	if cluster_name in mydict:
-		ip = mydict(cluster_name)
+		ip = mydict[cluster_name]
 		print "Cluster " + cluster_name + " found with elastic ip " + ip
 		return ip
 	else:
@@ -94,7 +94,7 @@ def set_elastic_ip(cluster_name, elastic_ip):
 	reader = csv.reader(open('dict.csv', 'r+'))
 	mydict = dict(x for x in reader)
 	mydict[cluster_name] = elastic_ip
-	writer = csv.writer(open('dict.csv', 'w+'))
+	writer = csv.writer(open('dict.csv', 'wb'))
 	for key, value in mydict.items():
 		writer.writerow([key, value])
 
@@ -102,9 +102,10 @@ def delete_elastic_ip(cluster_name):
 	reader = csv.reader(open('dict.csv', 'r+'))
 	mydict = dict(x for x in reader)
 	if cluster_name in mydict:
+		ip = mydict[cluster_name]
 		print "Cluster " + cluster_name + " found with elastic ip " + ip + " ... removing ..."
-		mydict.pop
-		writer = csv.writer(open('dict.csv', 'w+'))
+		mydict.remove(cluster_name)
+		writer = csv.writer(open('dict.csv', 'wb'))
 		for key, value in mydict.items():
 			writer.writerow([key, value])
 	else:
