@@ -6,17 +6,25 @@
 		<label>Number of slaves</label> <input type="text" name="num_slave" value="2"> 
 		<label>Elastic IP</label> <input type="text" name="elastic_ip" value=""> 
 		<label>Key Pair</label> <select name="key_pair" >
+ 
 			{% for key_pair in key_pairs %}
-				<option selected=true>adatao2</option>
-				<option>{{key_pair.name}}</option>
+            {%   if key_pair.name == "adatao2" %}
+				<option selected=true>{{key_pair.name}}</option>
+            {%   else %}
+                <option>{{key_pair.name}}</option>
+            {%   end  %}
 			{% end %}
 		</select>
 		<label>Instance Type</label> 
 		<select name="instance_type">
-			{% for instance_type in instance_types %}
-				<option selected=true>m3.large</option>
-				<option>{{instance_type}}</option>
-			{% end %}
+		    <option selected=true>m3.large</option>
+        	{% for instance_type in instance_types %}
+            {%   if instance_type == "m3.xlarge" %}
+				<option selected=true>{{instance_type}}</option>
+            {%   else %}
+                <option>{{instance_type}}</option>
+            {%   end  %}
+		    {% end %}
 		</select>
 		<label>EBS Vol Size (GB)</label> <input type="text" name="ebs_vol_size" value="15">
 		<label>Cluster Type</label> 
