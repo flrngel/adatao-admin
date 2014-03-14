@@ -16,10 +16,10 @@ from slacker.workers import ThreadWorker
 
 instance_types = [
     # General purpose
-    "m3.medium", 
     "m3.large", 
     "m3.xlarge", 
-    "m3.2xlarge", 
+    "m3.2xlarge",
+    "m3.medium", 
     "m1.small", 
     "m1.medium", 
     "m1.large", 
