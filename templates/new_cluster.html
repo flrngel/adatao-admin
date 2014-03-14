@@ -2,8 +2,7 @@
 <h3>New cluster</h3>
 <form method="post" action="/new_cluster">
 	<fieldset>
-		<label>Cluster name</label> <input type="text" name="cluster_name"
-			placeholder="Cluster name">
+		<label>Cluster name</label> <input type="text" name="cluster_name" placeholder="Cluster name">
 		<label>Number of slaves</label> <input type="text" name="num_slave" value="2"> 
 		<label>Elastic IP</label> <input type="text" name="elastic_ip" value=""> 
 		<label>Key Pair</label> <select name="key_pair">
@@ -11,29 +10,36 @@
 				<option>{{key_pair.name}}</option>
 			{% end %}
 		</select>
-		<label>Instance Type</label> <select name="instance_type">
+		<label>Instance Type</label> 
+		<select name="instance_type">
 			{% for instance_type in instance_types %}
 				<option>{{instance_type}}</option>
 			{% end %}
 		</select>
-		<label>Master Instance Type</label> <select name="master_instance_type">
+		<label>EBS Vol Size (GB)</label> <input type="text" name="ebs_vol_size" value="15">
+		<label>Cluster Type</label> 
+		<select name="cluster_type">
+			<option>mesos</option>
+			<option>standalone</option>
+		</select>
+
+		<!--
+		<label>Master Instance Type</label> 
+		<select name="master_instance_type">
 			{% for instance_type in instance_types %}
 				<option>{{instance_type}}</option>
 			{% end %}
 		</select>
-		<label>Zone</label> <select name="zone">
+		<label>Zone</label> 
+		<select name="zone">
 			<option>us-east-1a</option>
 			<option>us-east-1b</option>
 			<option>us-east-1c</option>
 			<option>us-east-1d</option>
 			<option selected="selected">us-east-1e</option>
 		</select>
-		<label>EBS Vol Size (GB)</label> <input type="text" name="ebs_vol_size" value="10">
 		<label>Swap (MB)</label> <input type="text" name="swap" value="1024">
-		<label>Cluster Type</label> <select name="cluster_type">
-			<option>mesos</option>
-			<option>standalone</option>
-		</select>
+		-->
 		<br />
 		<button type="submit" class="btn btn-primary">Create cluster</button>
 	</fieldset>

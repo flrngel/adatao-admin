@@ -14,7 +14,48 @@ from slacker import adisp
 from slacker import Slacker
 from slacker.workers import ThreadWorker
 
-instance_types = ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge", "t1.micro", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc2.8xlarge", "cr1.8xlarge", "cg1.4xlarge", "hi1.4xlarge", "hs1.8xlarge"]
+instance_types = [
+    # General purpose
+    "m3.medium", 
+    "m3.large", 
+    "m3.xlarge", 
+    "m3.2xlarge", 
+    "m1.small", 
+    "m1.medium", 
+    "m1.large", 
+    "m1.xlarge",
+
+    # Compute optimized
+    "c3.large",
+    "c3.xlarge",
+    "c3.2xlarge",
+    "c3.4xlarge",
+    "c3.8xlarge",
+    "c1.medium",
+    "c1.xlarge",
+    "cc2.8xlarge", 
+
+    # Memory optimized
+    "m2.xlarge", 
+    "m2.2xlarge", 
+    "m2.4xlarge", 
+    "cr1.8xlarge",
+
+    # Storage optimized
+    "i2.xlarge",
+    "i2.2xlarge",
+    "i2.4xlarge",
+    "i2.8xlarge",
+    "hs1.8xlarge",
+    "hi1.4xlarge", 
+
+    # GPU instances
+    "g2.2xlarge",
+    "cg1.4xlarge", 
+    
+    # Micro instances        
+    "t1.micro"]
+
 installer_dir = "../Installer/"
 
 class NewClusterHandler(tornado.web.RequestHandler):
@@ -37,11 +78,11 @@ class NewClusterHandler(tornado.web.RequestHandler):
                 return self.render('error.html', error_msg="Cluster name is already existed!")
             num_slave                           = self.get_argument("num_slave", "2")
             key_pair                            = self.get_argument("key_pair", "")
-            instance_type                       = self.get_argument("instance_type", "m1.small")
-            master_instance_type                = self.get_argument("master_instance_type", "m1.small")
-            zone                                = self.get_argument("zone", "us-east-1e")
+            instance_type                       = self.get_argument("instance_type", "m3.large")
+            #master_instance_type                = self.get_argument("master_instance_type", "m1.small")
+            #zone                                = self.get_argument("zone", "us-east-1e")
             ebs_vol_size                        = self.get_argument("ebs_vol_size", "10")
-            swap                                = self.get_argument("swap", "1024")
+            #swap                                = self.get_argument("swap", "1024")
             cluster_type                        = self.get_argument("cluster_type", "mesos")
             elastic_ip                          = self.get_argument("elastic_ip", "")
             (AWS_ACCESS_KEY, AWS_SECRET_KEY)    = utils.get_aws_credentials()
@@ -53,16 +94,17 @@ class NewClusterHandler(tornado.web.RequestHandler):
               cluster_name, 
               num_slave, 
               "--elastic-ip", elastic_ip, 
-              "--ssh-key", key_pair 
-              #"--type", instance_type, 
+              "--ssh-key", key_pair,
+              "--type", instance_type,
               #"--zone", zone, 
-              #"--num-ebs-vols", num_ebs_volumes, 
-              #"--ebs", 2, ebs_vol_size
+              "--ebs", ebs_vol_size
               ]
             print ("Running : " + ' '.join(command))
             subprocess.Popen(command)
+            
             #save the (cluster_name, elastic_ip) to file
             utils.set_elastic_ip(cluster_name, elastic_ip)
+
             time.sleep(5)
             self.redirect("/")
         except Exception as e:
@@ -100,7 +142,7 @@ class ClusterHandler(tornado.web.RequestHandler):
                 "pa"                : "Adatao pAnalytics", 
                 "pi"                : "Adatao pInsights", 
                 "gridftp"           : "Grid FTP", 
-                "spark"             : "Spark (after connect)"}
+                "spark"             : "Spark (after adatao.connect)"}
             service_ports = {
                 "mesos"             : 5050, 
                 "ganglia"           : 5080, 
@@ -123,8 +165,6 @@ class ClusterHandler(tornado.web.RequestHandler):
                 for service in services:
                     port = service_ports[service]
                     service_statuses[service] = utils.isOpen(dns, port)
-                    if service == "shark" and service_statuses[service]:
-                        service_names[service] = "Shark (SQL Console)"
             self.render('cluster.html', error_msg=None, cluster_name=cluster_name, master_nodes=master_nodes, slave_nodes=slave_nodes, services=services, service_names=service_names, service_statuses=service_statuses, service_links=service_links)
         except Exception as e:
             print >> stderr, (e)
