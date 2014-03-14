@@ -6,7 +6,6 @@
 		<label>Number of slaves</label> <input type="text" name="num_slave" value="2"> 
 		<label>Elastic IP</label> <input type="text" name="elastic_ip" value=""> 
 		<label>Key Pair</label> <select name="key_pair" >
- 
 			{% for key_pair in key_pairs %}
             {%   if key_pair.name == "adatao2" %}
 				<option selected=true>{{key_pair.name}}</option>
@@ -17,7 +16,6 @@
 		</select>
 		<label>Instance Type</label> 
 		<select name="instance_type">
-		    <option selected=true>m3.large</option>
         	{% for instance_type in instance_types %}
             {%   if instance_type == "m3.xlarge" %}
 				<option selected=true>{{instance_type}}</option>
