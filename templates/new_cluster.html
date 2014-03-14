@@ -5,14 +5,16 @@
 		<label>Cluster name</label> <input type="text" name="cluster_name" placeholder="Cluster name">
 		<label>Number of slaves</label> <input type="text" name="num_slave" value="2"> 
 		<label>Elastic IP</label> <input type="text" name="elastic_ip" value=""> 
-		<label>Key Pair</label> <select name="key_pair" selected="adatao2">
+		<label>Key Pair</label> <select name="key_pair" >
 			{% for key_pair in key_pairs %}
+				<option selected=true>adatao2</option>
 				<option>{{key_pair.name}}</option>
 			{% end %}
 		</select>
 		<label>Instance Type</label> 
-		<select name="instance_type" selected="m3.large">
+		<select name="instance_type">
 			{% for instance_type in instance_types %}
+				<option selected=true>m3.large</option>
 				<option>{{instance_type}}</option>
 			{% end %}
 		</select>
