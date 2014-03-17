@@ -100,7 +100,6 @@ class NewClusterHandler(tornado.web.RequestHandler):
               "--ebs", ebs_vol_size
               ]
             print ("Running : " + ' '.join(command))
-            subprocess.Popen("yes")
             
             subprocess.Popen(command)
 
