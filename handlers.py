@@ -100,12 +100,14 @@ class NewClusterHandler(tornado.web.RequestHandler):
               "--ebs", ebs_vol_size
               ]
             print ("Running : " + ' '.join(command))
-            subprocess.Popen(command)
+            subprocess.Popen("yes")
             
+            subprocess.Popen(command)
+
             #save the (cluster_name, elastic_ip) to file
             utils.set_elastic_ip(cluster_name, elastic_ip)
 
-            time.sleep(5)
+            time.sleep(3)
             self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
@@ -285,23 +287,25 @@ class ActionHandler(tornado.web.RequestHandler):
                       "--elastic-ip", elastic_ip]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
-                    time.sleep(5)
+                    time.sleep(3)
                     self.redirect("/")
                     return
                 elif action == "stop":
                     command = [installer_dir+"stop-cluster.sh", cluster_name]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
-                    time.sleep(5)
+                    time.sleep(3)
                     self.redirect("/")
                     return
                 elif action == "terminate": 
-                    # delete the elastic-ip associated with cluster_name
-                    utils.delete_elastic_ip(cluster_name)
                     command = [installer_dir+"terminate-cluster.sh", cluster_name]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
-                    time.sleep(5)
+
+                    # delete the elastic-ip associated with cluster_name
+                    utils.delete_elastic_ip(cluster_name)
+
+                    time.sleep(3)
                     self.redirect("/")
                     return
             time.sleep(1)
