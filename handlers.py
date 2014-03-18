@@ -107,7 +107,7 @@ class NewClusterHandler(tornado.web.RequestHandler):
             #save the (cluster_name, elastic_ip) to file
             utils.set_elastic_ip(cluster_name, elastic_ip)
 
-            time.sleep(3)
+            time.sleep(7)
             self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
@@ -148,7 +148,7 @@ class ClusterHandler(tornado.web.RequestHandler):
             service_ports = {
                 "mesos"             : 5050, 
                 "ganglia"           : 5080, 
-                "ephemeral_hdfs"    : 50070, 
+                "ephemeral_hdfs"    : 50070,
                 "pa"                : 7911,
                 "pi"                : 8890, 
                 "gridftp"           : 5000, 
@@ -287,7 +287,7 @@ class ActionHandler(tornado.web.RequestHandler):
                       "--elastic-ip", elastic_ip]
                     print ("Running : " + ' '.join(command))
                     subprocess.Popen(command)
-                    time.sleep(3)
+                    time.sleep(5)
                     self.redirect("/")
                     return
                 elif action == "stop":
