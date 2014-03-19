@@ -255,7 +255,7 @@ class ActionHandler(tornado.web.RequestHandler):
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad restart && /etc/init.d/httpd restart")
             elif service == "pa":
                 if action == "start":
-                    yield async_ssh(key_pair_file, dns, "pssh -v -h /root/spirk-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+                    yield async_ssh(key_pair_file, dns, "pssh -v -h /root/spark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
                 elif action == "stop":
                     yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh")
                 elif action == "restart":
