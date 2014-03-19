@@ -253,20 +253,20 @@ class ActionHandler(tornado.web.RequestHandler):
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad stop && /etc/init.d/httpd stop")
                 elif action == "restart":
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad restart && /etc/init.d/httpd restart")
-			elif service == "pa":
-				if action == "start":
-					yield async_ssh(key_pair_file, dns, "pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
-				elif action == "stop":
-					yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh")
-				elif action == "restart":
-					yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh && pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
-			elif service == "pi":
-				if action == "start":
-					yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
-				elif action == "stop":
-					yield async_ssh(key_pair_file, dns, "pkill -f ipython")
-				elif action == "restart":
-					yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
+            elif service == "pa":
+                if action == "start":
+                    yield async_ssh(key_pair_file, dns, "pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+                elif action == "stop":
+                    yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh")
+                elif action == "restart":
+                    yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh && pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+            elif service == "pi":
+                if action == "start":
+                    yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
+                elif action == "stop":
+                    yield async_ssh(key_pair_file, dns, "pkill -f ipython")
+                elif action == "restart":
+                    yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
             elif service == "ephemeral_hdfs":
                 if action == "start":
                     yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/start-dfs.sh")
