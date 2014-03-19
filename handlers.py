@@ -259,7 +259,7 @@ class ActionHandler(tornado.web.RequestHandler):
                 elif action == "stop":
                     yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh")
                 elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh && pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh && pssh -v -h /root/spark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
             elif service == "pi":
                 if action == "start":
                     yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
