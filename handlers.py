@@ -229,11 +229,11 @@ class ActionHandler(tornado.web.RequestHandler):
             # Execute action
             if service == "mesos":
                 if action == "start":
-                    yield async_ssh(key_pair_file, dns, "spark-ec2/mesos/start-mesos")
+                    yield async_ssh(key_pair_file, dns, "/root/spark-ec2/mesos/start-mesos")
                 elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "spark-ec2/mesos/stop-mesos")
+                    yield async_ssh(key_pair_file, dns, "/root/spark-ec2/mesos/stop-mesos")
                 elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "spark-ec2/mesos/stop-mesos && spark-ec2/mesos/start-mesos")
+                    yield async_ssh(key_pair_file, dns, "/root/spark-ec2/mesos/stop-mesos && /root/spark-ec2/mesos/start-mesos")
             elif service == "shark":
                 if action == "start":
                     command = (("rsync --ignore-existing -rv -e 'ssh -o StrictHostKeyChecking=no -i %s' " + 
@@ -253,27 +253,27 @@ class ActionHandler(tornado.web.RequestHandler):
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad stop && /etc/init.d/httpd stop")
                 elif action == "restart":
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad restart && /etc/init.d/httpd restart")
+			elif service == "pa":
+				if action == "start":
+					yield async_ssh(key_pair_file, dns, "pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+				elif action == "stop":
+					yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh")
+				elif action == "restart":
+					yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh && pssh -v -h /root/spiark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+			elif service == "pi":
+				if action == "start":
+					yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
+				elif action == "stop":
+					yield async_ssh(key_pair_file, dns, "pkill -f ipython")
+				elif action == "restart":
+					yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
             elif service == "ephemeral_hdfs":
                 if action == "start":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/start-dfs.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/start-dfs.sh")
                 elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-dfs.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/stop-dfs.sh")
                 elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-dfs.sh && ~/ephemeral-hdfs/bin/start-dfs.sh")
-            elif service == "persistent_hdfs":
-                if action == "start":
-                    yield async_ssh(key_pair_file, dns, "~/persistent-hdfs/bin/start-dfs.sh")
-                elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "~/persistent-hdfs/bin/stop-dfs.sh")
-                elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "~/persistent-hdfs/bin/stop-dfs.sh && ~/persistent-hdfs/bin/start-dfs.sh")
-            elif service == "hadoop_mapreduce":
-                if action == "start":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/start-mapred.sh")
-                elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-mapred.sh")
-                elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-mapred.sh && ~/ephemeral-hdfs/bin/start-mapred.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/stop-dfs.sh && /root/ephemeral-hdfs/bin/start-dfs.sh")
             elif service == "cluster":
                 if action == "start":
                     (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
