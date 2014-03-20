@@ -106,7 +106,7 @@ class NewClusterHandler(tornado.web.RequestHandler):
             #save the (cluster_name, elastic_ip) to file
             utils.set_elastic_ip(cluster_name, elastic_ip)
 
-            time.sleep(7)
+            time.sleep(10)
             self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
