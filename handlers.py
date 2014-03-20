@@ -101,13 +101,7 @@ class NewClusterHandler(tornado.web.RequestHandler):
               ]
             print ("Running : " + ' '.join(command))
             
-            p = subprocess.Popen(command, stdout=subprocess.PIPE)
-            while p.poll() is None:
-                l = p.stdout.readline() # This blocks until it receives a newline.
-                print l
-            # When the subprocess terminates there might be unconsumed output 
-            # that still needs to be processed.
-            print p.stdout.read()
+            subprocess.Popen(command)
 
             #save the (cluster_name, elastic_ip) to file
             utils.set_elastic_ip(cluster_name, elastic_ip)
