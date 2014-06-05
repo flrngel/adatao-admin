@@ -116,8 +116,8 @@ def detect_existing_clusters(conn):
 	master_names = []
 	slave_names = []
 	for res in reservations:
-		master_names += [g.name.replace("-master", "") for g in res.groups if g.name.endswith("-master")]
-		slave_names += [g.name.replace("-slaves", "") for g in res.groups if g.name.endswith("-slaves")]
+		master_names += [g.name[0:g.name.find("-master")] for g in res.groups if "-master" in g.name]
+		slave_names += [g.name[0:g.name.find("-slaves")]  for g in res.groups if "-slaves" in g.name]
 	names = set(master_names) & set(slave_names)
 	dict_masters = {}
 	dict_slaves = {}
@@ -126,9 +126,10 @@ def detect_existing_clusters(conn):
 		slave_nodes = []
 		for res in reservations:
 			group_names = [g.name for g in res.groups]
-			if group_names == [name + "-master"]:
+			print group_names
+			if name + "-master" in group_names:
 				master_nodes += res.instances
-			elif group_names == [name + "-slaves"]:
+			elif name + "-slaves" in group_names:
 				slave_nodes += res.instances
 		dict_masters[name] = master_nodes
 		dict_slaves[name] = slave_nodes
@@ -142,11 +143,11 @@ def get_existing_cluster(conn, cluster_name, die_on_error=True):
 	zoo_nodes = []
 	for res in reservations:
 		group_names = [g.name for g in res.groups]
-		if group_names == [cluster_name + "-master"]:
+		if cluster_name + "-master" in group_names:
 			master_nodes += res.instances
-		elif group_names == [cluster_name + "-slaves"]:
+		elif cluster_name + "-slaves" in group_names:
 			slave_nodes += res.instances
-		elif group_names == [cluster_name + "-zoo"]:
+		elif cluster_name + "-zoo" in group_names:
 			zoo_nodes += res.instances
 	if any((master_nodes, slave_nodes, zoo_nodes)):
 		print ("Found %d master(s), %d slaves, %d ZooKeeper nodes" % 
