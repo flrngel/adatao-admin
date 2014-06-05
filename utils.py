@@ -126,11 +126,11 @@ def detect_existing_clusters(conn):
 		slave_nodes = []
 		for res in reservations:
 			group_names = [g.name for g in res.groups]
-			print group_names
-			if name + "-master" in group_names:
-				master_nodes += res.instances
-			elif name + "-slaves" in group_names:
-				slave_nodes += res.instances
+			for group_name in group_names:
+				if name + "-master" in group_name:
+					master_nodes += res.instances
+				elif name + "-slaves" in group_name:
+					slave_nodes += res.instances
 		dict_masters[name] = master_nodes
 		dict_slaves[name] = slave_nodes
 	return (names, dict_masters, dict_slaves)
@@ -143,12 +143,13 @@ def get_existing_cluster(conn, cluster_name, die_on_error=True):
 	zoo_nodes = []
 	for res in reservations:
 		group_names = [g.name for g in res.groups]
-		if cluster_name + "-master" in group_names:
-			master_nodes += res.instances
-		elif cluster_name + "-slaves" in group_names:
-			slave_nodes += res.instances
-		elif cluster_name + "-zoo" in group_names:
-			zoo_nodes += res.instances
+		for group_name in group_names:
+			if cluster_name + "-master" in group_name:
+				master_nodes += res.instances
+			elif cluster_name + "-slaves" in group_name:
+				slave_nodes += res.instances
+			elif cluster_name + "-zoo" in group_name:
+				zoo_nodes += res.instances
 	if any((master_nodes, slave_nodes, zoo_nodes)):
 		print ("Found %d master(s), %d slaves, %d ZooKeeper nodes" % 
 		       (len(master_nodes), len(slave_nodes), len(zoo_nodes)))
