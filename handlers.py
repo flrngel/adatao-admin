@@ -156,8 +156,8 @@ class ClusterHandler(tornado.web.RequestHandler):
                 "mesos"             : "http://" + master_nodes[0].public_dns_name + ":5050", 
                 "ganglia"           : "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", 
                 "ephemeral_hdfs"    : "http://" + master_nodes[0].public_dns_name + ":50070", 
-                "pa"                : "", 
-                "pi"                : "http://" + master_nodes[0].public_dns_name + ":8890/pi/",
+                "pa"                : "http://" + master_nodes[0].public_dns_name + ":7911", 
+                "pi"                : "http://" + master_nodes[0].public_dns_name + ":8890",
                 "gridftp"           : "", 
                 "spark"             : "http://" + master_nodes[0].public_dns_name + ":30001"}
             service_statuses = {}
