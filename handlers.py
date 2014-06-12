@@ -4,7 +4,7 @@ from threading import Thread
 from tornado import gen
 from utils import ssh
 import os
-import spark_ec2
+#import spark_ec2
 import subprocess
 import sys
 import time
@@ -14,7 +14,49 @@ from slacker import adisp
 from slacker import Slacker
 from slacker.workers import ThreadWorker
 
-instance_types = ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge", "t1.micro", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc2.8xlarge", "cr1.8xlarge", "cg1.4xlarge", "hi1.4xlarge", "hs1.8xlarge"]
+instance_types = [
+    # General purpose
+    "m3.large", 
+    "m3.xlarge", 
+    "m3.2xlarge",
+    "m3.medium", 
+    "m1.small", 
+    "m1.medium", 
+    "m1.large", 
+    "m1.xlarge",
+
+    # Compute optimized
+    "c3.large",
+    "c3.xlarge",
+    "c3.2xlarge",
+    "c3.4xlarge",
+    "c3.8xlarge",
+    "c1.medium",
+    "c1.xlarge",
+    "cc2.8xlarge", 
+
+    # Memory optimized
+    "m2.xlarge", 
+    "m2.2xlarge", 
+    "m2.4xlarge", 
+    "cr1.8xlarge",
+
+    # Storage optimized
+    "i2.xlarge",
+    "i2.2xlarge",
+    "i2.4xlarge",
+    "i2.8xlarge",
+    "hs1.8xlarge",
+    "hi1.4xlarge", 
+
+    # GPU instances
+    "g2.2xlarge",
+    "cg1.4xlarge", 
+    
+    # Micro instances        
+    "t1.micro"]
+
+installer_dir = "../Installer/"
 
 class NewClusterHandler(tornado.web.RequestHandler):
     def get(self):
@@ -34,23 +76,38 @@ class NewClusterHandler(tornado.web.RequestHandler):
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
             if len(master_nodes) > 0:
                 return self.render('error.html', error_msg="Cluster name is already existed!")
-            num_slave = self.get_argument("num_slave", "2")
-            key_pair = self.get_argument("key_pair", "")
-            instance_type = self.get_argument("instance_type", "m1.small")
-            master_instance_type = self.get_argument("master_instance_type", "m1.small")
-            zone = self.get_argument("zone", "us-east-1e")
-            ebs_vol_size = self.get_argument("ebs_vol_size", "10")
-            swap = self.get_argument("swap", "1024")
-            cluster_type = self.get_argument("cluster_type", "mesos")
-            (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
-            os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY
+            num_slave                           = self.get_argument("num_slave", "2")
+            key_pair                            = self.get_argument("key_pair", "")
+            instance_type                       = self.get_argument("instance_type", "m3.large")
+            #master_instance_type                = self.get_argument("master_instance_type", "m1.small")
+            #zone                                = self.get_argument("zone", "us-east-1e")
+            ebs_vol_size                        = self.get_argument("ebs_vol_size", "10")
+            #swap                                = self.get_argument("swap", "1024")
+            cluster_type                        = self.get_argument("cluster_type", "mesos")
+            elastic_ip                          = self.get_argument("elastic_ip", "")
+            (AWS_ACCESS_KEY, AWS_SECRET_KEY)    = utils.get_aws_credentials()
+            os.environ['AWS_ACCESS_KEY_ID']     = AWS_ACCESS_KEY
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
             key_pair_file =  os.getcwd() + "/keys/" + key_pair + ".pem" 
-            sys.argv = ["spark_ec2.py", "-s", num_slave, "-u", "root", "-k", key_pair, "-i", key_pair_file, "-t", instance_type, "-m", master_instance_type, "-r", "us-east-1", "-z" , zone, "--ebs-vol-size=" + ebs_vol_size, "--swap=" + swap, "--cluster-type=" + cluster_type, "launch", cluster_name]
-            t = Thread(target=spark_ec2.main, args=())
-            t.daemon = True
-            t.start()
-            self.render('notice.html', identity_file=key_pair_file)
+
+            command = [installer_dir+"launch-cluster.sh", 
+              cluster_name, 
+              num_slave, 
+              "--elastic-ip", elastic_ip, 
+              "--ssh-key", key_pair,
+              "--type", instance_type,
+              #"--zone", zone, 
+              "--ebs", ebs_vol_size
+              ]
+            print ("Running : " + ' '.join(command))
+            
+            subprocess.Popen(command)
+
+            #save the (cluster_name, elastic_ip) to file
+            utils.set_elastic_ip(cluster_name, elastic_ip)
+
+            time.sleep(10)
+            self.redirect("/")
         except Exception as e:
             print >> stderr, (e)
             self.render('error.html', error_msg=str(e))
@@ -70,18 +127,45 @@ class ClusterHandler(tornado.web.RequestHandler):
         try:
             conn = utils.get_ec2_conn(self)
             (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-            services = ["mesos", "shark", "ganglia", "ephemeral_hdfs", "persistent_hdfs", "hadoop_mapreduce"]
-            service_names = {"mesos" : "Mesos", "shark" : "Shark", "ganglia": "Ganglia", "ephemeral_hdfs": "Ephemeral HDFS", "persistent_hdfs": "Persistent HDFS", "hadoop_mapreduce": "Hadoop MapReduce"}
-            service_ports = {"mesos" : 8080, "shark" : 10000, "ganglia": 5080, "ephemeral_hdfs": 50070, "persistent_hdfs": 60070, "hadoop_mapreduce": 50030}
-            service_links = {"mesos" : "http://" + master_nodes[0].public_dns_name + ":8080", "shark": "/sql_console?server=" + master_nodes[0].public_dns_name, "ganglia": "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", "ephemeral_hdfs": "http://" + master_nodes[0].public_dns_name + ":50070", "persistent_hdfs": "http://" + master_nodes[0].public_dns_name + ":60070", "hadoop_mapreduce": "http://" + master_nodes[0].public_dns_name + ":50030"}
+            services = [
+                "mesos", 
+                "ganglia", 
+                "ephemeral_hdfs", 
+                "pi", 
+                "pa", 
+                "gridftp", 
+                "spark"
+                ]
+            service_names = {
+                "mesos"             : "Mesos", 
+                "ganglia"           : "Ganglia", 
+                "ephemeral_hdfs"    : "Ephemeral HDFS", 
+                "pa"                : "Adatao pAnalytics", 
+                "pi"                : "Adatao pInsights", 
+                "gridftp"           : "Grid FTP", 
+                "spark"             : "Spark (after adatao.connect)"}
+            service_ports = {
+                "mesos"             : 5050, 
+                "ganglia"           : 5080, 
+                "ephemeral_hdfs"    : 50070,
+                "pa"                : 7911,
+                "pi"                : 8890, 
+                "gridftp"           : 5000, 
+                "spark"             : 30001}
+            service_links = {
+                "mesos"             : "http://" + master_nodes[0].public_dns_name + ":5050", 
+                "ganglia"           : "http://" + master_nodes[0].public_dns_name + ":5080/ganglia", 
+                "ephemeral_hdfs"    : "http://" + master_nodes[0].public_dns_name + ":50070", 
+                "pa"                : "http://" + master_nodes[0].public_dns_name + ":7911", 
+                "pi"                : "http://" + master_nodes[0].public_dns_name + ":8890",
+                "gridftp"           : "", 
+                "spark"             : "http://" + master_nodes[0].public_dns_name + ":30001"}
             service_statuses = {}
             if len(master_nodes) > 0:
                 dns = master_nodes[0].public_dns_name
                 for service in services:
                     port = service_ports[service]
                     service_statuses[service] = utils.isOpen(dns, port)
-                    if service == "shark" and service_statuses[service]:
-                        service_names[service] = "Shark (SQL Console)"
             self.render('cluster.html', error_msg=None, cluster_name=cluster_name, master_nodes=master_nodes, slave_nodes=slave_nodes, services=services, service_names=service_names, service_statuses=service_statuses, service_links=service_links)
         except Exception as e:
             print >> stderr, (e)
@@ -135,21 +219,21 @@ class ActionHandler(tornado.web.RequestHandler):
     @adisp.process
     def get(self):
         try:
-            cluster_name = self.get_argument("cluster_name", "")
-            dns = self.get_argument("dns", "")
-            service = self.get_argument("service", "")
-            action = self.get_argument("action", "")
-            key_pair = self.get_argument("key_pair", "")
-            key_pair_file = os.getcwd() + "/keys/" + key_pair + ".pem"
+            cluster_name    = self.get_argument("cluster_name")
+            dns             = self.get_argument("dns")
+            service         = self.get_argument("service")
+            action          = self.get_argument("action")
+            key_pair        = self.get_argument("key_pair")
+            key_pair_file   = os.getcwd() + "/keys/" + key_pair + ".pem"
             
             # Execute action
             if service == "mesos":
                 if action == "start":
-                    yield async_ssh(key_pair_file, dns, "spark-ec2/mesos/start-mesos")
+                    yield async_ssh(key_pair_file, dns, "/root/spark-ec2/mesos/start-mesos")
                 elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "spark-ec2/mesos/stop-mesos")
+                    yield async_ssh(key_pair_file, dns, "/root/spark-ec2/mesos/stop-mesos")
                 elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "spark-ec2/mesos/stop-mesos && spark-ec2/mesos/start-mesos")
+                    yield async_ssh(key_pair_file, dns, "/root/spark-ec2/mesos/stop-mesos && /root/spark-ec2/mesos/start-mesos")
             elif service == "shark":
                 if action == "start":
                     command = (("rsync --ignore-existing -rv -e 'ssh -o StrictHostKeyChecking=no -i %s' " + 
@@ -169,67 +253,58 @@ class ActionHandler(tornado.web.RequestHandler):
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad stop && /etc/init.d/httpd stop")
                 elif action == "restart":
                     yield async_ssh(key_pair_file, dns, "/etc/init.d/gmetad restart && /etc/init.d/httpd restart")
+            elif service == "pa":
+                if action == "start":
+                    yield async_ssh(key_pair_file, dns, "pssh -v -h /root/spark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+                elif action == "stop":
+                    yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh")
+                elif action == "restart":
+                    yield async_ssh(key_pair_file, dns, "/root/BigR/server/exe/stop-pa-server.sh && pssh -v -h /root/spark-ec2/slaves -l root '/root/BigR/server/exe/start-rserve.sh' && /root/BigR/server/exe/start-pa-server.sh")
+            elif service == "pi":
+                if action == "start":
+                    yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
+                elif action == "stop":
+                    yield async_ssh(key_pair_file, dns, "pkill -f ipython")
+                elif action == "restart":
+                    yield async_ssh(key_pair_file, dns, "/root/pInsights/run-pInsights-server.sh")
             elif service == "ephemeral_hdfs":
                 if action == "start":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/start-dfs.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/start-dfs.sh")
                 elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-dfs.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/stop-dfs.sh")
                 elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-dfs.sh && ~/ephemeral-hdfs/bin/start-dfs.sh")
-            elif service == "persistent_hdfs":
-                if action == "start":
-                    yield async_ssh(key_pair_file, dns, "~/persistent-hdfs/bin/start-dfs.sh")
-                elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "~/persistent-hdfs/bin/stop-dfs.sh")
-                elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "~/persistent-hdfs/bin/stop-dfs.sh && ~/persistent-hdfs/bin/start-dfs.sh")
-            elif service == "hadoop_mapreduce":
-                if action == "start":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/start-mapred.sh")
-                elif action == "stop":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-mapred.sh")
-                elif action == "restart":
-                    yield async_ssh(key_pair_file, dns, "~/ephemeral-hdfs/bin/stop-mapred.sh && ~/ephemeral-hdfs/bin/start-mapred.sh")
+                    yield async_ssh(key_pair_file, dns, "/root/ephemeral-hdfs/bin/stop-dfs.sh && /root/ephemeral-hdfs/bin/start-dfs.sh")
             elif service == "cluster":
                 if action == "start":
                     (AWS_ACCESS_KEY, AWS_SECRET_KEY) = utils.get_aws_credentials()
                     os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY
                     os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_KEY
-                    sys.argv = ["spark_ec2.py", "-u", "root", "-k", key_pair, "-i", key_pair_file, "start", cluster_name]
-                    t = Thread(target=spark_ec2.main, args=())
-                    t.daemon = True
-                    t.start()
-                    self.render('notice.html', identity_file=key_pair_file)
-                    return
-                elif action == "stop":
-                    conn = utils.get_ec2_conn(self)
-                    (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-                    for inst in master_nodes:
-                        if inst.state not in ["shutting-down", "terminated"]:
-                          inst.stop()
-                    print "Stopping slaves..."
-                    for inst in slave_nodes:
-                        if inst.state not in ["shutting-down", "terminated"]:
-                          inst.stop()
-                    if zoo_nodes != []:
-                        print "Stopping zoo..."
-                        for inst in zoo_nodes:
-                          if inst.state not in ["shutting-down", "terminated"]:
-                            inst.stop()
-                    time.sleep(1)
+                    # get the elastic-ip associated with cluster_name
+                    elastic_ip = utils.get_elastic_ip(cluster_name)                    
+                    command = [installer_dir+"start-cluster.sh", 
+                      cluster_name, 
+                      "--elastic-ip", elastic_ip]
+                    print ("Running : " + ' '.join(command))
+                    subprocess.Popen(command)
+                    time.sleep(5)
                     self.redirect("/")
                     return
-                elif action == "terminate":
-                    conn = utils.get_ec2_conn(self)
-                    (master_nodes, slave_nodes, zoo_nodes) = utils.get_existing_cluster(conn, cluster_name)
-                    for inst in master_nodes:
-                        inst.terminate()
-                    for inst in slave_nodes:
-                        inst.terminate()
-                    if zoo_nodes != []:
-                        for inst in zoo_nodes:
-                          inst.terminate()
-                    time.sleep(1)
+                elif action == "stop":
+                    command = [installer_dir+"stop-cluster.sh", cluster_name]
+                    print ("Running : " + ' '.join(command))
+                    subprocess.Popen(command)
+                    time.sleep(3)
+                    self.redirect("/")
+                    return
+                elif action == "terminate": 
+                    command = [installer_dir+"terminate-cluster.sh", cluster_name]
+                    print ("Running : " + ' '.join(command))
+                    subprocess.Popen(command)
+
+                    # delete the elastic-ip associated with cluster_name
+                    utils.delete_elastic_ip(cluster_name)
+
+                    time.sleep(3)
                     self.redirect("/")
                     return
             time.sleep(1)
