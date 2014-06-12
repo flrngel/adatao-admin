@@ -1,8 +1,8 @@
 ===============
-Adatao-Admin
+Spark-Admin
 ===============
 
-The Adatao-Admin provides administrators and developers a GUI to provision and manage Spark clusters easily. The current alpha version is based on Spark-EC2 script and its latest AMI. Support for different Linux distros is planned in the next version.
+The Spark-Admin provides administrators and developers a GUI to provision and manage Spark clusters easily. The current alpha version is based on Spark-EC2 script and its latest AMI. Support for different Linux distros is planned in the next version.
 
 # Features
 * Automatically detect existing Spark clusters created by spark-ec2 script
