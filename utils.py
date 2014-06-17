@@ -112,54 +112,62 @@ def delete_elastic_ip(cluster_name):
 		print "IP of cluster " + cluster_name + " not found!"
 
 def detect_existing_clusters(conn):
-	reservations = conn.get_all_instances()
-	master_names = []
-	slave_names = []
-	for res in reservations:
-		master_names += [g.name[0:g.name.find("-master")] for g in res.groups if "-master" in g.name]
-		slave_names += [g.name[0:g.name.find("-slaves")]  for g in res.groups if "-slaves" in g.name]
-	names = set(master_names) & set(slave_names)
-	dict_masters = {}
-	dict_slaves = {}
-	for name in names:
-		master_nodes = []
-		slave_nodes = []
-		for res in reservations:
-			group_names = [g.name for g in res.groups]
-			for group_name in group_names:
-				if name + "-master" in group_name:
-					master_nodes += res.instances
-				elif name + "-slaves" in group_name:
-					slave_nodes += res.instances
-		dict_masters[name] = master_nodes
-		dict_slaves[name] = slave_nodes
-	return (names, dict_masters, dict_slaves)
+  reservations = conn.get_all_instances()
+  master_names = []
+  slave_names = []
+  for res in reservations:
+    for inst in res.instances:
+      for g in inst.groups:
+        if "-master" in g.name:
+          master_names += [ g.name[0:g.name.find("-master")] ]
+        if "-slaves" in g.name:
+          slave_names += [ g.name[0:g.name.find("-slaves")] ]
+  names = set(master_names) & set(slave_names)
+  dict_masters = {}
+  dict_slaves = {}
+  for name in names:
+    master_nodes = []
+    slave_nodes = []
+    for res in reservations:
+      for inst in res.instances:
+        group_names = [g.name for g in inst.groups]
+        for group_name in group_names:
+          if name + "-master" in group_name:
+            master_nodes += res.instances
+          elif name + "-slaves" in group_name:
+            slave_nodes += res.instances
+    dict_masters[name] = list(set(master_nodes))
+    dict_slaves[name] = list(set(slave_nodes))
+  return (names, dict_masters, dict_slaves)
 
 def get_existing_cluster(conn, cluster_name, die_on_error=True):
-	print "Searching for existing cluster " + cluster_name + "..."
-	reservations = conn.get_all_instances()
-	master_nodes = []
-	slave_nodes = []
-	zoo_nodes = []
-	for res in reservations:
-		group_names = [g.name for g in res.groups]
-		for group_name in group_names:
-			if cluster_name + "-master" in group_name:
-				master_nodes += res.instances
-			elif cluster_name + "-slaves" in group_name:
-				slave_nodes += res.instances
-			elif cluster_name + "-zoo" in group_name:
-				zoo_nodes += res.instances
-	if any((master_nodes, slave_nodes, zoo_nodes)):
-		print ("Found %d master(s), %d slaves, %d ZooKeeper nodes" % 
-		       (len(master_nodes), len(slave_nodes), len(zoo_nodes)))
-	if (master_nodes != [] and slave_nodes != []) or not die_on_error:
-		return (master_nodes, slave_nodes, zoo_nodes)
-	else:
-		if master_nodes == [] and slave_nodes != []:
-			print "ERROR: Could not find master in group " + cluster_name + "-master"
-		elif master_nodes != [] and slave_nodes == []:
-			print "ERROR: Could not find slaves in group " + cluster_name + "-slaves"
-		else:
-			print "ERROR: Could not find any existing cluster"
-		return (master_nodes, slave_nodes, zoo_nodes)
+  print "Searching for existing cluster " + cluster_name + "..."
+  reservations = conn.get_all_instances()
+  master_nodes = []
+  slave_nodes = []
+  zoo_nodes = []
+  for res in reservations:
+    for inst in res.instances:
+      group_names = [g.name for g in inst.groups]
+      for group_name in group_names:
+        if cluster_name + "-master" in group_name:
+          master_nodes += res.instances
+        elif cluster_name + "-slaves" in group_name:
+          slave_nodes += res.instances
+        elif cluster_name + "-zoo" in group_name:
+          zoo_nodes += res.instances
+  master_nodes = list(set(master_nodes))
+  slave_nodes = list(set(slave_nodes))
+  if any((master_nodes, slave_nodes, zoo_nodes)):
+    print ("Found %d master(s), %d slaves, %d ZooKeeper nodes" % 
+        (len(master_nodes), len(slave_nodes), len(zoo_nodes)))
+    if (master_nodes != [] and slave_nodes != []) or not die_on_error:
+      return (master_nodes, slave_nodes, zoo_nodes)
+  else:
+    if master_nodes == [] and slave_nodes != []:
+      print "ERROR: Could not find master in group " + cluster_name + "-master"
+    elif master_nodes != [] and slave_nodes == []:
+      print "ERROR: Could not find slaves in group " + cluster_name + "-slaves"
+    else:
+      print "ERROR: Could not find any existing cluster"
+    return (master_nodes, slave_nodes, zoo_nodes)
